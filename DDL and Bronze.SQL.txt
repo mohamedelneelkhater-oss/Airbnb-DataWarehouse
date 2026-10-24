@@ -1,0 +1,159 @@
+-- 1. إنشاء قاعدة بيانات مستودع البيانات
+CREATE DATABASE Airbnb_DW;
+GO
+
+USE Airbnb_DW;
+GO
+
+-- 2. إنشاء مخططات الطبقات (Medallion Architecture Schemas)
+CREATE SCHEMA Bronze;
+GO
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+USE Airbnb_DW;
+GO
+
+--------------------------------------------------------------------------------
+-- 1. فحص القيم الفارغة (NULLs) لجميع الأعمدة الأساسية لكل المدن
+--------------------------------------------------------------------------------
+SELECT '1. Nulls Check Report' AS Report_Type, City_Day, Null_Price, Null_RoomType, Null_Capacity, Null_Cleanliness, Null_Satisfaction, Null_Bedrooms, Null_Dist, Null_MetroDist
+FROM (
+    SELECT 'Amsterdam Weekdays' AS City_Day,
+           SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END) AS Null_Price,
+           SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END) AS Null_RoomType,
+           SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END) AS Null_Capacity,
+           SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END) AS Null_Cleanliness,
+           SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END) AS Null_Satisfaction,
+           SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END) AS Null_Bedrooms,
+           SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END) AS Null_Dist,
+           SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) AS Null_MetroDist
+    FROM Bronze.amsterdam_weekdays
+    UNION ALL
+    SELECT 'Amsterdam Weekends', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.amsterdam_weekends
+    UNION ALL
+    SELECT 'Athens Weekdays', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.athens_weekdays
+    UNION ALL
+    SELECT 'Athens Weekends', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.athens_weekends
+    UNION ALL
+    SELECT 'Barcelona Weekdays', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.barcelona_weekdays
+    UNION ALL
+    SELECT 'Barcelona Weekends', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.barcelona_weekends
+    UNION ALL
+    SELECT 'Berlin Weekdays', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.berlin_weekdays
+    UNION ALL
+    SELECT 'Berlin Weekends', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.berlin_weekends
+    UNION ALL
+    SELECT 'Budapest Weekdays', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.budapest_weekdays
+    UNION ALL
+    SELECT 'Budapest Weekends', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.budapest_weekends
+    UNION ALL
+    SELECT 'Lisbon Weekdays', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.lisbon_weekdays
+    UNION ALL
+    SELECT 'Lisbon Weekends', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.lisbon_weekends
+    UNION ALL
+    SELECT 'London Weekdays', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.london_weekdays
+    UNION ALL
+    SELECT 'London Weekends', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.london_weekends
+    UNION ALL
+    SELECT 'Paris Weekdays', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.paris_weekdays
+    UNION ALL
+    SELECT 'Paris Weekends', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.paris_weekends
+    UNION ALL
+    SELECT 'Rome Weekdays', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.rome_weekdays
+    UNION ALL
+    SELECT 'Rome Weekends', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.rome_weekends
+    UNION ALL
+    SELECT 'Vienna Weekdays', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.vienna_weekdays
+    UNION ALL
+    SELECT 'Vienna Weekends', SUM(CASE WHEN realSum IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN room_type IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN cleanliness_rating IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN guest_satisfaction_overall IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN dist IS NULL THEN 1 ELSE 0 END), SUM(CASE WHEN metro_dist IS NULL THEN 1 ELSE 0 END) FROM Bronze.vienna_weekends
+) AS AllNulls;
+GO
+
+--------------------------------------------------------------------------------
+-- 2. فحص الأخطاء والقيم الشاذة (Error & Outliers Check) لكل المدن
+--------------------------------------------------------------------------------
+SELECT '2. Error Check Report' AS Report_Type, City_Day, Price_Errors, Capacity_Errors, Bedroom_Errors, Distance_Errors
+FROM (
+    SELECT 'Amsterdam Weekdays' AS City_Day,
+           SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END) AS Price_Errors,
+           SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END) AS Capacity_Errors,
+           SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END) AS Bedroom_Errors,
+           SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) AS Distance_Errors
+    FROM Bronze.amsterdam_weekdays
+    UNION ALL
+    SELECT 'Amsterdam Weekends', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.amsterdam_weekends
+    UNION ALL
+    SELECT 'Athens Weekdays', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.athens_weekdays
+    UNION ALL
+    SELECT 'Athens Weekends', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.athens_weekends
+    UNION ALL
+    SELECT 'Barcelona Weekdays', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.barcelona_weekdays
+    UNION ALL
+    SELECT 'Barcelona Weekends', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.barcelona_weekends
+    UNION ALL
+    SELECT 'Berlin Weekdays', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.berlin_weekdays
+    UNION ALL
+    SELECT 'Berlin Weekends', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.berlin_weekends
+    UNION ALL
+    SELECT 'Budapest Weekdays', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.budapest_weekdays
+    UNION ALL
+    SELECT 'Budapest Weekends', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.budapest_weekends
+    UNION ALL
+    SELECT 'Lisbon Weekdays', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.lisbon_weekdays
+    UNION ALL
+    SELECT 'Lisbon Weekends', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.lisbon_weekends
+    UNION ALL
+    SELECT 'London Weekdays', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.london_weekdays
+    UNION ALL
+    SELECT 'London Weekends', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.london_weekends
+    UNION ALL
+    SELECT 'Paris Weekdays', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.paris_weekdays
+    UNION ALL
+    SELECT 'Paris Weekends', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.paris_weekends
+    UNION ALL
+    SELECT 'Rome Weekdays', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.rome_weekdays
+    UNION ALL
+    SELECT 'Rome Weekends', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.rome_weekends
+    UNION ALL
+    SELECT 'Vienna Weekdays', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.vienna_weekdays
+    UNION ALL
+    SELECT 'Vienna Weekends', SUM(CASE WHEN realSum <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN person_capacity <= 0 THEN 1 ELSE 0 END), SUM(CASE WHEN bedrooms < 0 THEN 1 ELSE 0 END), SUM(CASE WHEN dist < 0 OR metro_dist < 0 THEN 1 ELSE 0 END) FROM Bronze.vienna_weekends
+) AS AllErrors;
+GO
+
+--------------------------------------------------------------------------------
+-- 3. فحص تناسق النصوص (Capital / Small) وتنوع قيم عمود room_type في كل المدن
+--------------------------------------------------------------------------------
+SELECT '3. Room Type Consistency Check' AS Check_Type, 
+       LOWER(RTRIM(LTRIM(room_type))) AS Cleaned_Room_Type, 
+       COUNT(*) AS Frequency 
+FROM (
+    SELECT room_type FROM Bronze.amsterdam_weekdays
+    UNION ALL SELECT room_type FROM Bronze.amsterdam_weekends
+    UNION ALL SELECT room_type FROM Bronze.athens_weekdays
+    UNION ALL SELECT room_type FROM Bronze.athens_weekends
+    UNION ALL SELECT room_type FROM Bronze.barcelona_weekdays
+    UNION ALL SELECT room_type FROM Bronze.barcelona_weekends
+    UNION ALL SELECT room_type FROM Bronze.berlin_weekdays
+    UNION ALL SELECT room_type FROM Bronze.berlin_weekends
+    UNION ALL SELECT room_type FROM Bronze.budapest_weekdays
+    UNION ALL SELECT room_type FROM Bronze.budapest_weekends
+    UNION ALL SELECT room_type FROM Bronze.lisbon_weekdays
+    UNION ALL SELECT room_type FROM Bronze.lisbon_weekends
+    UNION ALL SELECT room_type FROM Bronze.london_weekdays
+    UNION ALL SELECT room_type FROM Bronze.london_weekends
+    UNION ALL SELECT room_type FROM Bronze.paris_weekdays
+    UNION ALL SELECT room_type FROM Bronze.paris_weekends
+    UNION ALL SELECT room_type FROM Bronze.rome_weekdays
+    UNION ALL SELECT room_type FROM Bronze.rome_weekends
+    UNION ALL SELECT room_type FROM Bronze.vienna_weekdays
+    UNION ALL SELECT room_type FROM Bronze.vienna_weekends
+) AS AllCitiesRooms
+GROUP BY LOWER(RTRIM(LTRIM(room_type)));
+GO

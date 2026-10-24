@@ -1,0 +1,168 @@
+USE Airbnb_DW;
+GO
+
+-- 0. التأكد من إنشاء المخطط Gold
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'Gold')
+BEGIN
+    EXEC('CREATE SCHEMA Gold');
+END
+GO
+
+-- 1. حذف الجداول القديمة والقيود بترتيب عكسي لتجنب التعارض
+IF EXISTS (SELECT * FROM sys.foreign_keys WHERE schema_id = SCHEMA_ID('Gold'))
+BEGIN
+    DECLARE @sql NVARCHAR(MAX) = N'';
+    SELECT @sql += N'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id)) + '.' + QUOTENAME(OBJECT_NAME(parent_object_id)) + ' DROP CONSTRAINT ' + QUOTENAME(name) + ';'
+    FROM sys.foreign_keys
+    WHERE SCHEMA_NAME(schema_id) = 'Gold' OR referenced_object_id IN (SELECT object_id FROM sys.tables WHERE SCHEMA_NAME(schema_id) = 'Gold');
+    
+    IF LEN(@sql) > 0 EXEC sp_executesql @sql;
+END
+GO
+
+IF OBJECT_ID('Gold.Fact_Airbnb', 'U') IS NOT NULL DROP TABLE Gold.Fact_Airbnb;
+IF OBJECT_ID('Gold.Dim_City', 'U') IS NOT NULL DROP TABLE Gold.Dim_City;
+IF OBJECT_ID('Gold.Dim_DayType', 'U') IS NOT NULL DROP TABLE Gold.Dim_DayType;
+IF OBJECT_ID('Gold.Dim_RoomType', 'U') IS NOT NULL DROP TABLE Gold.Dim_RoomType;
+IF OBJECT_ID('Gold.Dim_Date', 'U') IS NOT NULL DROP TABLE Gold.Dim_Date;
+GO
+
+-- 2. إنشاء جداول الأبعاد (Dimension Tables)
+CREATE TABLE Gold.Dim_City (
+    city_key INT IDENTITY(1,1) PRIMARY KEY,
+    city_name VARCHAR(50) NOT NULL UNIQUE
+);
+GO
+
+CREATE TABLE Gold.Dim_DayType (
+    day_type_key INT IDENTITY(1,1) PRIMARY KEY,
+    day_type VARCHAR(20) NOT NULL UNIQUE
+);
+GO
+
+CREATE TABLE Gold.Dim_RoomType (
+    room_type_key INT IDENTITY(1,1) PRIMARY KEY,
+    room_type VARCHAR(50) NOT NULL UNIQUE
+);
+GO
+
+CREATE TABLE Gold.Dim_Date (
+    date_key INT NOT NULL PRIMARY KEY,
+    full_date DATE NOT NULL,
+    [year] INT,
+    [quarter] INT,
+    [month] INT,
+    month_name VARCHAR(20),
+    [day] INT,
+    day_name VARCHAR(20),
+    is_weekend BIT
+);
+GO
+
+-- 3. تعبئة جدول التاريخ (Dim_Date) من 2024 إلى 2026
+DECLARE @StartDate DATE = '2024-01-01';
+DECLARE @EndDate DATE = '2026-12-31';
+
+WHILE @StartDate <= @EndDate
+BEGIN
+    INSERT INTO Gold.Dim_Date (
+        date_key, full_date, [year], [quarter], [month], month_name, [day], day_name, is_weekend
+    )
+    SELECT 
+        CAST(FORMAT(@StartDate, 'yyyyMMdd') AS INT),
+        @StartDate,
+        YEAR(@StartDate),
+        DATEPART(QUARTER, @StartDate),
+        MONTH(@StartDate),
+        DATENAME(MONTH, @StartDate),
+        DAY(@StartDate),
+        DATENAME(WEEKDAY, @StartDate),
+        CASE WHEN DATENAME(WEEKDAY, @StartDate) IN ('Friday', 'Saturday', 'Sunday') THEN 1 ELSE 0 END;
+
+    SET @StartDate = DATEADD(day, 1, @StartDate);
+END
+GO
+
+-- 4. تعبئة بيانات جداول الأبعاد الأخرى من الفضة
+INSERT INTO Gold.Dim_City (city_name)
+SELECT DISTINCT city_name FROM Silver.Fact_Airbnb_Cleaned WHERE city_name IS NOT NULL;
+
+INSERT INTO Gold.Dim_DayType (day_type)
+SELECT DISTINCT day_type FROM Silver.Fact_Airbnb_Cleaned WHERE day_type IS NOT NULL;
+
+INSERT INTO Gold.Dim_RoomType (room_type)
+SELECT DISTINCT room_type FROM Silver.Fact_Airbnb_Cleaned WHERE room_type IS NOT NULL;
+GO
+
+-- 5. إنشاء جدول الحقائق المركزي (Fact_Airbnb) مع ربط جميع المفاتيح الأجنبية
+CREATE TABLE Gold.Fact_Airbnb (
+    fact_id INT IDENTITY(1,1) PRIMARY KEY,
+    city_key INT NOT NULL,
+    day_type_key INT NOT NULL,
+    room_type_key INT NULL,
+    date_key INT NOT NULL,
+    listing_id INT,
+    price_eur DECIMAL(10,2),
+    room_shared BIT,
+    room_private BIT,
+    person_capacity INT,
+    is_superhost BIT,
+    is_multiple_rooms INT,
+    is_business_listing INT,
+    cleanliness_score DECIMAL(4,2),
+    satisfaction_score DECIMAL(4,2),
+    bedrooms_count INT,
+    dist_city_center_km DECIMAL(6,2),
+    dist_metro_km DECIMAL(6,2),
+    attraction_index DECIMAL(10,2),
+    attraction_index_norm DECIMAL(10,2),
+    restaurant_index DECIMAL(10,2),
+    restaurant_index_norm DECIMAL(10,2),
+    longitude DECIMAL(10,6),
+    latitude DECIMAL(10,6),
+
+    CONSTRAINT FK_Fact_City FOREIGN KEY (city_key) REFERENCES Gold.Dim_City(city_key),
+    CONSTRAINT FK_Fact_DayType FOREIGN KEY (day_type_key) REFERENCES Gold.Dim_DayType(day_type_key),
+    CONSTRAINT FK_Fact_RoomType FOREIGN KEY (room_type_key) REFERENCES Gold.Dim_RoomType(room_type_key),
+    CONSTRAINT FK_Fact_Date FOREIGN KEY (date_key) REFERENCES Gold.Dim_Date(date_key)
+);
+GO
+
+-- 6. ترحيل البيانات إلى جدول الحقائق
+INSERT INTO Gold.Fact_Airbnb (
+    city_key, day_type_key, room_type_key, date_key, listing_id, price_eur, 
+    room_shared, room_private, person_capacity, is_superhost, 
+    is_multiple_rooms, is_business_listing, cleanliness_score, 
+    satisfaction_score, bedrooms_count, dist_city_center_km, 
+    dist_metro_km, attraction_index, attraction_index_norm, 
+    restaurant_index, restaurant_index_norm, longitude, latitude
+)
+SELECT 
+    c.city_key,
+    d.day_type_key,
+    r.room_type_key,
+    20250101 AS date_key,
+    s.listing_id,
+    s.price_eur,
+    s.room_shared,
+    s.room_private,
+    s.person_capacity,
+    s.is_superhost,
+    s.is_multiple_rooms,
+    s.is_business_listing,
+    s.cleanliness_score,
+    s.satisfaction_score,
+    s.bedrooms_count,
+    s.dist_city_center_km,
+    s.dist_metro_km,
+    s.attraction_index,
+    s.attraction_index_norm,
+    s.restaurant_index,
+    s.restaurant_index_norm,
+    s.longitude,
+    s.latitude
+FROM Silver.Fact_Airbnb_Cleaned s
+INNER JOIN Gold.Dim_City c ON s.city_name = c.city_name
+INNER JOIN Gold.Dim_DayType d ON s.day_type = d.day_type
+LEFT JOIN Gold.Dim_RoomType r ON s.room_type = r.room_type;
+GO
